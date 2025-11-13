@@ -1,5 +1,15 @@
 {
   "version": "0.2",
   "language": "en",
-  "words": []
+  "words": [
+    "diskstats",
+    "ingester",
+    "inmemory",
+    "kvstore",
+    "lifecycler",
+    "loadavg",
+    "netdev",
+    "rootfs",
+    "sysfs"
+  ]
 }
