@@ -1,0 +1,49 @@
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+local.file_match "system_logs" {
+  path_targets = [
+    { __path__ = "/var/log/*.log" },
+  ]
+  sync_period = "5s"
+}
+
+loki.source.file "system" {
+  targets    = local.file_match.system_logs.targets
+  forward_to = [loki.write.default.receiver]
+  tail_from_end = false
+}
+
+prometheus.exporter.unix "local" {
+  rootfs_path = "/host"
+  procfs_path = "/host/proc"
+  sysfs_path  = "/host/sys"
+
+  enable_collectors = [
+    "cpu",
+    "diskstats",
+    "filesystem",
+    "loadavg",
+    "meminfo",
+    "netdev",
+    "stat",
+    "uname",
+    "vmstat",
+  ]
+}
+
+prometheus.remote_write "local" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+prometheus.scrape "alloy" {
+  targets = prometheus.exporter.unix.local.targets
+  forward_to = [prometheus.remote_write.local.receiver]
+}
+
+
