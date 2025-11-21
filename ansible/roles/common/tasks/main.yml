@@ -21,22 +21,6 @@
     path: "/etc/alloy"
     state: directory
 
-- name: Create Alloy service
-  copy:
-    dest: /etc/systemd/system/alloy.service
-    mode: "0644"
-    content: |
-      [Unit]
-      Description=Grafana Alloy Agent
-      After=network-online.target
-
-      [Service]
-      ExecStart=/usr/local/bin/alloy run /etc/alloy/role.alloy
-      Restart=always
-
-      [Install]
-      WantedBy=multi-user.target
-
 - name: Download node exporter
   get_url:
     url: "{{ node_exporter_url }}"

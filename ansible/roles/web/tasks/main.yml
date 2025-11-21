@@ -2,8 +2,27 @@
 - name: Deploy Alloy config for WEB
   template:
     src: alloy-web.alloy.j2
-    dest: /etc/alloy/role.alloy
+    dest: /etc/alloy/{{role}}.alloy
     mode: "0644"
+
+- name: Create Alloy service
+  copy:
+    dest: /etc/systemd/system/alloy.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Grafana Alloy Agent
+      After=network-online.target
+
+      [Service]
+      ExecStart=/usr/local/bin/alloy run /etc/alloy/{{role}}.alloy
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Reload systemd
+  command: systemctl daemon-reload
 
 - name: Restart Alloy
   systemd:
