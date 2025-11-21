@@ -14,3 +14,9 @@
   roles:
     - web
 
+- hosts: lb
+  become: yes
+  vars_files:
+    - "group_vars/role_lb.yml"
+  roles:
+    - lb
