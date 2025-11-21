@@ -53,8 +53,8 @@ prometheus.relabel "node_exporter" {
   }
 
   rule {
-    target_label = "nodename"
-    replacement  = "{{ nodename }}"
+    target_label = "node_name"
+    replacement  = "{{ node_name }}"
   }
 }
 
@@ -86,7 +86,7 @@ loki.process "nginx_access" {
       service     = "web-server",
       environment = "{{ environment }}",
       team        = "{{ team }}",
-      nodename    = "{{ nodename }}",
+      node_name    = "{{ node_name }}",
       log_type    = "access",
     }
   }
@@ -115,7 +115,7 @@ loki.process "nginx_error" {
       service     = "web-server",
       environment = "{{ environment }}",
       team        = "{{ team }}",
-      nodename    = "{{ nodename }}",
+      node_name    = "{{ node_name }}",
       log_type    = "error",
       level       = "",
     }
@@ -152,7 +152,7 @@ loki.process "flask_app" {
       service     = "web-server",
       environment = "{{ environment }}",
       team        = "{{ team }}",
-      nodename    = "{{ nodename }}",
+      node_name    = "{{ node_name }}",
       log_type    = "application",
       level       = "",
     }
