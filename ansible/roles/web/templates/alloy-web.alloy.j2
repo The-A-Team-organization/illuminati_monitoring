@@ -1,0 +1,164 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+prometheus.remote_write "local_prometheus" {
+  endpoint {
+    url = "http://prometheus.service.consul:9090/api/v1/write"
+
+    queue_config {
+      capacity = 10000
+      max_shards = 10
+      max_samples_per_send = 5000
+    }
+  }
+}
+
+loki.write "local_loki" {
+  endpoint {
+    url = "http://loki.service.consul:3100/loki/api/v1/push"
+  }
+}
+
+prometheus.scrape "node_exporter" {
+  targets = [
+    {"__address__" = "localhost:9100"},
+  ]
+
+  forward_to = [prometheus.relabel.node_exporter.receiver]
+}
+
+prometheus.relabel "node_exporter" {
+  forward_to = [prometheus.remote_write.local_prometheus.receiver]
+
+  rule {
+    target_label = "job"
+    replacement  = "node"
+  }
+
+  rule {
+    target_label = "service"
+    replacement  = "web-server"
+  }
+
+  rule {
+    target_label = "environment"
+    replacement  = "{{ environment }}"
+  }
+
+  rule {
+    target_label = "team"
+    replacement  = "{{ team }}"
+  }
+
+  rule {
+    target_label = "nodename"
+    replacement  = "{{ nodename }}"
+  }
+}
+
+local.file_match "nginx_access_logs" {
+  path_targets = [
+    {"__path__" = "/var/log/nginx/access.log"},
+  ]
+}
+
+loki.source.file "nginx_access" {
+  targets    = local.file_match.nginx_access_logs.targets
+  forward_to = [loki.process.nginx_access.receiver]
+}
+
+loki.process "nginx_access" {
+  forward_to = [loki.write.local_loki.receiver]
+
+  stage.json {
+    expressions = {
+      remote_addr = "remote_addr",
+      status      = "status",
+      request     = "request",
+    }
+  }
+
+  stage.labels {
+    values = {
+      job         = "nginx",
+      service     = "web-server",
+      environment = "{{ environment }}",
+      team        = "{{ team }}",
+      nodename    = "{{ nodename }}",
+      log_type    = "access",
+    }
+  }
+}
+
+local.file_match "nginx_error_logs" {
+  path_targets = [
+    {"__path__" = "/var/log/nginx/error.log"},
+  ]
+}
+
+loki.source.file "nginx_error" {
+  targets    = local.file_match.nginx_error_logs.targets
+  forward_to = [loki.process.nginx_error.receiver]
+}
+
+loki.process "nginx_error" {
+  forward_to = [loki.write.local_loki.receiver]
+
+  stage.regex {
+    expression = "^(?P<timestamp>\\d{4}/\\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}) \\[(?P<level>\\w+)\\] (?P<message>.+)$"
+  }
+  stage.labels {
+    values = {
+      job         = "nginx",
+      service     = "web-server",
+      environment = "{{ environment }}",
+      team        = "{{ team }}",
+      nodename    = "{{ nodename }}",
+      log_type    = "error",
+      level       = "",
+    }
+  }
+}
+
+local.file_match "flask_logs" {
+  path_targets = [
+    {"__path__" = "/var/log/flask/app.log"},
+    {"__path__" = "/var/log/birdwatching/*.log"},
+  ]
+}
+
+loki.source.file "flask_app" {
+  targets    = local.file_match.flask_logs.targets
+  forward_to = [loki.process.flask_app.receiver]
+}
+
+loki.process "flask_app" {
+  forward_to = [loki.write.local_loki.receiver]
+
+  stage.json {
+    expressions = {
+      level     = "level",
+      message   = "message",
+      timestamp = "timestamp",
+      module    = "module",
+    }
+  }
+
+  stage.labels {
+    values = {
+      job         = "flask",
+      service     = "web-server",
+      environment = "{{ environment }}",
+      team        = "{{ team }}",
+      nodename    = "{{ nodename }}",
+      log_type    = "application",
+      level       = "",
+    }
+  }
+
+  stage.regex {
+    expression = "^(?P<timestamp>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}) (?P<level>\\w+) (?P<message>.+)$"
+  }
+}
