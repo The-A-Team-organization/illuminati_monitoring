@@ -12,14 +12,22 @@
 - name: Unarchive Alloy
   unarchive:
     src: "/tmp/alloy.zip"
-    dest: "/usr/local/bin"
+    dest: "/tmp"
     remote_src: yes
     mode: "0755"
+
+- name: Move Alloy binary
+  copy:
+    src: "/tmp/alloy-linux-amd64"
+    dest: "/usr/local/bin/alloy"
+    mode: "0755"
+    remote_src: yes
 
 - name: Ensure Alloy config dir exists
   file:
     path: "/etc/alloy"
     state: directory
+    mode: "0755"
 
 - name: Download node exporter
   get_url:
