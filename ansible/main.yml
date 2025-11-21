@@ -20,3 +20,10 @@
     - "group_vars/role_lb.yml"
   roles:
     - lb
+
+- hosts: db
+  become: yes
+  vars_files:
+    - "group_vars/role_db.yml"
+  roles:
+    - db
