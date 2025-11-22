@@ -49,31 +49,26 @@
       copy:
         src: ../docker-compose.yml
         dest: "{{ app_dir }}/docker-compose.yml"
-        mode: 0644
 
     - name: Copy alloy configs
       copy:
         src: ../alloy
         dest: "{{ app_dir }}/alloy"
-        mode: 0644
 
     - name: Copy grafana configs
       copy:
         src: ../grafana
         dest: "{{ app_dir }}/grafana"
-        mode: 0644
 
     - name: Copy loki configs
       copy:
         src: ../loki
         dest: "{{ app_dir }}/loki"
-        mode: 0644
 
     - name: Copy prometheus configs
       copy:
         src: ../prometheus
         dest: "{{ app_dir }}/prometheus"
-        mode: 0644
 
     - name: Start or update Docker Compose stack
       shell: |
