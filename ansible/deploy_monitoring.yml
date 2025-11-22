@@ -48,12 +48,15 @@
         path: "{{ app_dir }}"
         state: directory
 
-    - name: Copy ENTIRE project folder to server
+    - name: Copy only workspace contents (not ansible folder)
       copy:
-        src: "{{ playbook_dir }}/.."
-        dest: "{{ app_dir }}"
-        mode: preserve
+        src: "{{ playbook_dir | dirname }}/"
+        dest: "{{ app_dir }}/"
         remote_src: no
+        mode: preserve
+        exclude:
+          - "ansible"
+          - "ansible@tmp"
 
     - name: Start docker compose
       shell: |
@@ -61,3 +64,4 @@
         docker compose down --remove-orphans || true
         docker compose pull
         docker compose up -d
+
