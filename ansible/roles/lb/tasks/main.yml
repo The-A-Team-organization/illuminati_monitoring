@@ -1,7 +1,7 @@
 ---
-- name: Deploy Alloy config for WEB
+- name: Deploy Alloy config for LB
   template:
-    src: alloy-web.alloy.j2
+    src: alloy-lb.alloy.j2
     dest: /etc/alloy/{{role}}.alloy
     mode: "0644"
 
