@@ -50,13 +50,14 @@
 
     - name: Copy ENTIRE project folder to server
       copy:
-        src: "{{ playbook_dir | dirname }}/."
-        dest: "{{ app_dir }}/"
+        src: "{{ playbook_dir }}/.."
+        dest: "{{ app_dir }}"
+        mode: preserve
+        remote_src: no
 
     - name: Start docker compose
       shell: |
-        cd {{ app_dir }}
+        cd {{ app_dir }}/Configure-Main-Monitoring-Instance
         docker compose down --remove-orphans || true
         docker compose pull
         docker compose up -d
-
