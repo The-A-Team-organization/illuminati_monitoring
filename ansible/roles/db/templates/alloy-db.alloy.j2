@@ -32,28 +32,28 @@ prometheus.relabel "node_exporter" {
   forward_to = [prometheus.remote_write.local_prometheus.receiver]
 
   rule { 
-    target_label = "job"; 
-    replacement = "node" 
+    target_label = "job"
+    replacement = "node"
   }
   
   rule { 
-    target_label = "service"; 
-    replacement = "database" 
+    target_label = "service"
+    replacement = "database"
   }
   
   rule { 
-    target_label = "environment"; 
-    replacement = "{{ environment }}" 
+    target_label = "environment"
+    replacement = "{{ environment }}"
   }
   
   rule { 
-    target_label = "team"; 
-    replacement = "{{ team }}" 
+    target_label = "team"
+    replacement = "{{ team }}"
   }
 
   rule { 
-    target_label = "node_name"; 
-    replacement = "{{ node_name }}" 
+    target_label = "node_name"
+    replacement = "{{ node_name }}"
   }
 }
 
@@ -68,28 +68,28 @@ prometheus.relabel "pg" {
   forward_to = [prometheus.remote_write.local_prometheus.receiver]
 
   rule { 
-    target_label = "job"; 
-    replacement = "postgres" 
+    target_label = "job"
+    replacement = "postgres"
   }
   
   rule { 
-    target_label = "service"; 
-    replacement = "database" 
+    target_label = "service"
+    replacement = "database"
   }
 
   rule { 
-    target_label = "environment"; 
-    replacement = "{{ environment }}" 
+    target_label = "environment"
+    replacement = "{{ environment }}"
   }
 
   rule { 
-    target_label = "team"; 
-    replacement = "{{ team }}" 
+    target_label = "team"
+    replacement = "{{ team }}"
   }
 
   rule { 
-    target_label = "node_name"; 
-    replacement = "{{ node_name }}" 
+    target_label = "node_name"
+    replacement = "{{ node_name }}"
   }
 }
 
