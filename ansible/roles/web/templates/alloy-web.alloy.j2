@@ -124,7 +124,7 @@ loki.process "nginx_error" {
 
 local.file_match "flask_logs" {
   path_targets = [
-    {"__path__" = "/var/log/birdwatching/app.log"}
+    {"__path__" = "/var/log/birdwatching/app.log"},
   ]
 }
 

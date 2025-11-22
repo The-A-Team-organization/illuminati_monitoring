@@ -12,6 +12,7 @@
     src: "/tmp/postgres_exporter-{{ postgres_exporter_version }}.linux-amd64/postgres_exporter"
     dest: "/usr/local/bin/postgres_exporter"
     mode: "0755"
+    remote_src: yes
 
 - name: Create exporter DB user
   become: yes
