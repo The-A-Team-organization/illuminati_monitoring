@@ -70,10 +70,16 @@
         src: ../loki
         dest: "{{ app_dir }}/loki"
 
-    - name: Copy prometheus configs
+    - name: Ensure prometheus config directory exists
+      file:
+        path: "{{ app_dir }}/prometheus"
+        state: directory
+        mode: 0755
+
+    - name: Copy prometheus config file
       copy:
-        src: ../prometheus
-        dest: "{{ app_dir }}/prometheus"
+        src: ../prometheus/prometheus.yml
+        dest: "{{ app_dir }}/prometheus/prometheus.yml"
 
     - name: Start or update Docker Compose stack
       shell: |
