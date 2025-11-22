@@ -8,7 +8,6 @@
     ansible_region: "eu-central-1"
     ansible_aws_ssm_bucket_name: "ansible-ssm-bucket-oleg"
 
-
   tasks:
     - name: Install required packages
       apt:
@@ -45,15 +44,21 @@
         state: directory
         mode: 0755
 
+    - name: Create alloy config directory
+      file:
+        path: "{{ app_dir }}/alloy"
+        state: directory
+        mode: 0755
+
     - name: Copy docker-compose.yml
       copy:
         src: ../docker-compose.yml
         dest: "{{ app_dir }}/docker-compose.yml"
 
-    - name: Copy alloy configs
+    - name: Copy alloy config file
       copy:
-        src: ../alloy
-        dest: "{{ app_dir }}/alloy"
+        src: ../alloy/alloy-config.alloy
+        dest: "{{ app_dir }}/alloy/alloy-config.alloy"
 
     - name: Copy grafana configs
       copy:
