@@ -1,0 +1,83 @@
+---
+- hosts: monitoring
+  become: yes
+
+  vars:
+    app_dir: /opt/app
+    ansible_connection: aws_ssm
+    ansible_region: "eu-central-1"
+    ansible_aws_ssm_bucket_name: "ansible-ssm-bucket-oleg"
+
+
+  tasks:
+    - name: Install required packages
+      apt:
+        name: [ "ca-certificates", "curl", "gnupg" ]
+        state: present
+        update_cache: yes
+
+    - name: Add Docker GPG key
+      shell: |
+        install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        chmod a+r /etc/apt/keyrings/docker.asc
+
+    - name: Add Docker repo
+      copy:
+        dest: /etc/apt/sources.list.d/docker.list
+        content: |
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+
+    - name: Install Docker Engine + Compose v2
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: latest
+        update_cache: yes
+
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: 0755
+
+    - name: Copy docker-compose.yml
+      copy:
+        src: ../docker-compose.yml
+        dest: "{{ app_dir }}/docker-compose.yml"
+        mode: 0644
+
+    - name: Copy alloy configs
+      copy:
+        src: ../alloy
+        dest: "{{ app_dir }}/alloy"
+        mode: 0644
+
+    - name: Copy grafana configs
+      copy:
+        src: ../grafana
+        dest: "{{ app_dir }}/grafana"
+        mode: 0644
+
+    - name: Copy loki configs
+      copy:
+        src: ../loki
+        dest: "{{ app_dir }}/loki"
+        mode: 0644
+
+    - name: Copy prometheus configs
+      copy:
+        src: ../prometheus
+        dest: "{{ app_dir }}/prometheus"
+        mode: 0644
+
+    - name: Start or update Docker Compose stack
+      shell: |
+        cd {{ app_dir }}
+        docker compose pull
+        docker compose up -d --remove-orphans
+
