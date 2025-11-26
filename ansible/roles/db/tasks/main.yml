@@ -67,7 +67,7 @@
       [Install]
       WantedBy=multi-user.target
 
-- name: Reload systemd (again)
+- name: Reload systemd
   become: yes
   command: systemctl daemon-reload
 
