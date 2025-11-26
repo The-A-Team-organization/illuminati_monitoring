@@ -11,7 +11,7 @@
   tasks:
     - name: Install required packages
       apt:
-        name: [ "ca-certificates", "curl", "gnupg" ]
+        name: ["ca-certificates", "curl", "gnupg"]
         state: present
         update_cache: yes
 

@@ -28,4 +28,3 @@
   systemd:
     name: alloy
     state: restarted
-
