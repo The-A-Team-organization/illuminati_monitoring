@@ -1,0 +1,29 @@
+---
+- name: Install Alloy + Node Exporter everywhere
+  hosts: monitored_nodes
+  become: yes
+  vars_files:
+    - "group_vars/role_common.yml"
+  roles:
+    - common
+
+- hosts: web
+  become: yes
+  vars_files:
+    - "group_vars/role_web.yml"
+  roles:
+    - web
+
+- hosts: lb
+  become: yes
+  vars_files:
+    - "group_vars/role_lb.yml"
+  roles:
+    - lb
+
+- hosts: db
+  become: yes
+  vars_files:
+    - "group_vars/role_db.yml"
+  roles:
+    - db

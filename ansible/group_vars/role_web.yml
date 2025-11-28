@@ -1,0 +1,6 @@
+team: web-team
+role: web
+service: birdwatching-flask
+ansible_connection: aws_ssm
+ansible_region: "eu-central-1"
+ansible_aws_ssm_bucket_name: "ansible-ssm-bucket-oleg"

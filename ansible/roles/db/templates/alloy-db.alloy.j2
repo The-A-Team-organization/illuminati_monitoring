@@ -1,0 +1,125 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+prometheus.remote_write "local_prometheus" {
+  endpoint {
+    url = "http://prometheus.service.consul:9090/api/v1/write"
+
+    queue_config {
+      capacity = 10000
+      max_shards = 10
+      max_samples_per_send = 5000
+    }
+  }
+}
+
+loki.write "local_loki" {
+  endpoint {
+    url = "http://loki.service.consul:3100/loki/api/v1/push"
+  }
+}
+
+prometheus.scrape "node_exporter" {
+  targets = [
+    {"__address__" = "localhost:9100"},
+  ]
+  forward_to = [prometheus.relabel.node_exporter.receiver]
+}
+
+prometheus.relabel "node_exporter" {
+  forward_to = [prometheus.remote_write.local_prometheus.receiver]
+
+  rule { 
+    target_label = "job"
+    replacement = "node"
+  }
+  
+  rule { 
+    target_label = "service"
+    replacement = "database"
+  }
+  
+  rule { 
+    target_label = "environment"
+    replacement = "{{ environment }}"
+  }
+  
+  rule { 
+    target_label = "team"
+    replacement = "{{ team }}"
+  }
+
+  rule { 
+    target_label = "node_name"
+    replacement = "{{ node_name }}"
+  }
+}
+
+prometheus.scrape "postgres_exporter" {
+  targets = [
+    {"__address__" = "localhost:9187"},
+  ]
+  forward_to = [prometheus.relabel.pg.receiver]
+}
+
+prometheus.relabel "pg" {
+  forward_to = [prometheus.remote_write.local_prometheus.receiver]
+
+  rule { 
+    target_label = "job"
+    replacement = "postgres"
+  }
+  
+  rule { 
+    target_label = "service"
+    replacement = "database"
+  }
+
+  rule { 
+    target_label = "environment"
+    replacement = "{{ environment }}"
+  }
+
+  rule { 
+    target_label = "team"
+    replacement = "{{ team }}"
+  }
+
+  rule { 
+    target_label = "node_name"
+    replacement = "{{ node_name }}"
+  }
+}
+
+local.file_match "postgres_logs" {
+  path_targets = [
+    { "__path__" = "/var/log/postgresql/postgresql-16-main.log" },
+  ]
+}
+
+loki.source.file "postgres" {
+  targets    = local.file_match.postgres_logs.targets
+  forward_to = [loki.process.postgres.receiver]
+}
+
+loki.process "postgres" {
+  forward_to = [loki.write.local_loki.receiver]
+
+  stage.regex {
+    expression = "^(?P<timestamp>\\d+-\\d+-\\d+ \\d+:\\d+:\\d+ [A-Z]+) \\[(?P<pid>\\d+)\\] (?P<level>[A-Z]+): (?P<message>.+)$"
+  }
+
+  stage.labels {
+    values = {
+      job         = "postgres",
+      service     = "database",
+      log_type    = "postgres",
+      environment = "{{ environment }}",
+      team        = "{{ team }}",
+      node_name   = "{{ node_name }}",
+    }
+  }
+}
+

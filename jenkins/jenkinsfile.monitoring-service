@@ -1,0 +1,82 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(name: 'ENV', choices: ['dev', 'stage', 'prod'], description: 'Select environment')
+    }
+
+    environment {
+        AWS_REGION = "eu-central-1"
+        ANSIBLE_PLAYBOOK = "${WORKSPACE}/ansible/deploy_monitoring.yml"
+        ANSIBLE_INVENTORY = "/var/lib/jenkins/inventories/${params.ENV}.ini"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git (
+                    url: 'https://github.com/The-A-Team-organization/illuminati_monitoring.git',
+                    branch: 'TAT-105-Connect-Birdwatching-Infrastructure-to-Central-Monitoring-Service'
+                )
+                sh "ls -lart ${WORKSPACE}"
+            }
+        }
+
+        stage('Set AWS Role') {
+            steps {
+                script {
+                    if (params.ENV == 'dev') {
+                        env.AWS_CREDENTIALS_ID = "aws-dev-account-key"
+                        env.AWS_ACCOUNT_ID_FILE = "aws-dev-account-id"
+                    }
+                    else if (params.ENV == 'stage') {
+                        env.AWS_CREDENTIALS_ID = "aws-stage-account-key"
+                        env.AWS_ACCOUNT_ID_FILE = "aws-stage-account-id"
+                    }
+                    else if (params.ENV == 'prod') {
+                        env.AWS_CREDENTIALS_ID = "aws-prod-account-key"
+                        env.AWS_ACCOUNT_ID_FILE = "aws-prod-account-id"
+                    }
+
+                    withCredentials([string(credentialsId: env.AWS_ACCOUNT_ID_FILE, variable: 'AWS_ACCOUNT_ID')]) {
+                        env.AWS_ROLE_ARN = "arn:aws:iam::${AWS_ACCOUNT_ID}:role/TerraformRole${params.ENV.capitalize()}"
+                    }
+                }
+            }
+        }
+
+        stage('Assume Role + Run Single-File Ansible Playbook') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: env.AWS_CREDENTIALS_ID
+                ]]) {
+
+                    dir('ansible') {
+                        sh """
+                            set +x
+
+                            CREDS=\$(aws sts assume-role \
+                              --role-arn ${env.AWS_ROLE_ARN} \
+                              --role-session-name deploy-${params.ENV})
+
+                            export AWS_ACCESS_KEY_ID=\$(echo \$CREDS | jq -r '.Credentials.AccessKeyId')
+                            export AWS_SECRET_ACCESS_KEY=\$(echo \$CREDS | jq -r '.Credentials.SecretAccessKey')
+                            export AWS_SESSION_TOKEN=\$(echo \$CREDS | jq -r '.Credentials.SessionToken')
+                            export AWS_DEFAULT_REGION=${AWS_REGION}
+
+                            ansible-playbook \
+                              -i ${env.ANSIBLE_INVENTORY} \
+                              ${env.ANSIBLE_PLAYBOOK} \
+                              --extra-vars "env=${params.ENV}" \
+                              --extra-vars "aws_region=${env.AWS_REGION}" \
+                              -vvv
+                        """
+                    }
+                }
+            }
+        }
+    }
+}
+

@@ -2,13 +2,23 @@
   "version": "0.2",
   "language": "en",
   "words": [
+    "CREDS",
+    "buildx",
+    "creds",
     "diskstats",
     "ingester",
     "inmemory",
+    "keyrings",
     "kvstore",
+    "lart",
     "lifecycler",
     "loadavg",
+    "logfmt",
     "netdev",
+    "nodeexp",
+    "nologin",
+    "oleg",
+    "psql",
     "rootfs",
     "sysfs"
   ]
